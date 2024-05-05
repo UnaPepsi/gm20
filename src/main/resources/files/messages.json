@@ -1,0 +1,60 @@
+{
+	"item":[
+		"{player} grabbed a sniper",
+		"{player} crafted a diamond sword",
+		"{player} downloaded a hacked client",
+		"{player} bought pay to win advantages",
+		"{player} crafted golden apples",
+		"{player} found a Death Note",
+		"{player} grabbed a plastic knife",
+		"{player} found a broken glass bottle",
+		"{player} placed a kitchen knife in SCP 914 with setting \"very nice\" and got the \"Damascus Sword\" (sharpest sword in the world)",
+		"{player} got 1 Senzu Bean",
+		"{player} trained a Clash Royale Sparky",
+		"{player} got Geass mind control power",
+		"{player} got The World stand powers",
+		"{player} got Hamon powers",
+		"{player} found SCP 500"
+	],
+	"prepare":[
+		"{player} practices jitterclicking",
+		"{player} practices reflexes",
+		"{player} practices aim",
+		"{player} practices hacking",
+		"{player} practices swinging",
+		"{player} is lazy and gained 15Kg while moderating a Discord server",
+		"{player} goes to the gym and ends up 5 times stronger",
+		"{player} hires 15 bodygards",
+		"{player} masters breathing techniques",
+		"{player} practices running"
+	],
+	"confrontation":[
+		"{attacker} tries agro pearling on {victim} but gets lagbacked",
+		"{attacker} looks for stupid tweets/likes from {victim}",
+		"{attacker} lava'd themself trying to kill {victim} and ran away",
+		"{victim} has high ping, possibly DDoSed by {attacker}",
+		"{victim} tried to kill themself, but {attacker} didn't let them do it",
+		"{attacker} wrote {victim}'s name in the Death Note, mysteriously, someone wrote {victim}'s name aswell within less than 0.06 seconds of difference, therefore cancelling the Death Note effect",
+		"{attacker} questionates {victim}'s sexuality"
+	],
+	"death":[
+		"{victim} was quickdropped by {attacker}",
+		"{victim} got ratio'd by {attacker}",
+		"{victim} got frozen by {attacker} and refused to SS",
+		"{victim} got screenshared by {attacker} and was found using CHEATS",
+		"{victim} got DDoSed by {attacker}",
+		"{attacker} hacked {victim}'s phone and found {victim} is secretly in love with Dream",
+		"{victim} is gay",
+		"{victim} sucks, fuck you, you died",
+		"{victim} got struck by a lightning 14 times",
+		"{victim} bought WinRar, what an idiot",
+		"{victim} got backstabbed by {attacker}",
+		"{victim} killed themself",
+		"{victim} got infected with ebola, rabies, african trypanosomiasis, coronavirus, b virus, influenza, VIH, murray valley encephalitis, tularemia, leptospirosis, legionellosis and yellow fever all at once after {attacker} gave them a suspicious soup",
+		"{victim} accidentaly wrote their own name in the Death Note",
+		"{attacker} wrote {victim}'s name in their Death Note",
+		"{attacker} released SCP 173 and killed {victim}",
+		"{victim} got sniped by {attacker}",
+		"{victim} tried to boost themself running in SCP 914 with setting \"very nice\", while this worked for a short time, {victim} died"
+	]
+}

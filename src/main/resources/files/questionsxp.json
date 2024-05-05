@@ -1,0 +1,70 @@
+{
+	"discord_year_released":{
+		"question":"What year was Discord released?",
+        "answer":"2015"
+    },
+	"latam": {
+        "question": "What Latino country doesn't speak Spanish?",
+        "answer": "brazil"
+    },
+    "us_president": {
+        "question": "Who was the 1st US President?",
+        "answer": "george washington"
+    },
+    "number_spell": {
+        "question": "Spell the number 19572 fully",
+        "answer": "nineteen thousand five hundred seventy two"
+    },
+    "api": {
+        "question": "What does API stand for?",
+        "answer": "application programming interface"
+    },
+    "clash_royale": {
+        "question": "In what year was Clash Royale released?",
+        "answer": "2016"
+    },
+    "holy_died":{
+        "question":"How many days have passed since HolyPvP died?",
+        "answer":"{days}"
+    },
+    "ide":{
+        "question":"What does IDE stand for?",
+        "answer":"integrated development environment"
+    },
+    "canada":{
+        "question":"What's the second official Canada's language?",
+        "answer":"french"
+    },
+    "france_capital":{
+        "question":"What's the capital of France?",
+        "answer":"paris"
+    },
+    "gold":{
+        "question":"What's the chemical value of gold?",
+        "answer":"au"
+    },
+    "titanic":{
+        "question":"In what year did the Titanic sink?",
+        "answer":"1912"
+    },
+    "user_id":{
+        "question":"What's the Discord ID of the {user}?",
+        "answer":"{id}"
+    },
+    "organ":{
+        "question":"What's largest organ in the human body?",
+        "answer":"skin"
+    },
+    "romeo_and_juliet":{
+        "question":"Who wrote Romeo and Juliet?",
+        "answer":"william shakespeare"
+    },
+    "json":{
+        "question":"What does JSON stand for?",
+        "answer":"javascript object notation"
+    },
+    "translate":{
+        "question":"Translate desk to Spanish",
+        "answer":"escritorio"
+    }
+}

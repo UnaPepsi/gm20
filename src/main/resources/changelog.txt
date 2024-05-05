@@ -1,0 +1,259 @@
+2.39.0
+Version 2.0.0
+- Replaced old commands with slash commands
+- User messages are no longer logged (this was used to check for errors)
+- Prefix "?" has been removed (this was used for making the bot respond in DM, useless tbh)
+- Fixed a typo in command "isitchristmas"
+- When a username is not found in osu! commands, bot no longer gives an empty response
+- "help" and "cmds" commands have been removed
+End of changelog
+Version 2.0.1
+- Replaced old commands with slash commands
+- User messages are no longer logged (this was used to check for errors)
+- Prefix "?" has been removed (this was used for making the bot respond in DM, useless tbh)
+- Fixed a typo in command "isitchristmas"
+- When a username is not found in osu! commands, bot no longer gives an empty response
+- "help" and "cmds" commands have been removed
+- Fixed "End of changelog" appearing on the changelog message lol
+End of changelog
+Version 2.0.2
+- Fixed "gd" and "chamoy" commands not working
+End of changelog
+Version 2.1.0
+- Added /randomcam
+End of changelog
+Version 2.1.1
+- Fixed "ratio" not working if one or more characters were capitalized
+End of changelog
+Version 2.2.0
+- Fixed "randomcam" sometimes not working due to Discord timeout
+- Added information to "randomcam"
+- Almost lost my sanity after trying to fix an error that was caused by using a wrong link :(
+End of changelog
+Version 2.2.1
+- Fixed "randomcam" latitude not showing
+- Changed "randomcam" 's description
+End of changelog
+Version 2.3.0
+- Added "isgdout" lol
+End of changelog
+Version 2.4.0
+- Added "ratsapk"
+End of changelog
+Version 2.5.0
+- Added "dm"
+End of changelog
+Version 2.6.0
+- Added "suggest" (directly sends a suggestion to me)
+- Added "imgstats" (overall Fortnite stats in an image)
+- Uploaded a new video :-) https://youtu.be/nEHQiHGYZ0s?si=KwjMA8ffALDrJ2Vy
+End of changelog
+Version 2.6.1
+- Added time window for "imgstats"
+End of changelog
+Version 2.7.0
+- Changed pfp, about me, and added a changing rich presence :)
+End of changelog
+Version 2.7.0
+- Changed pfp, about me, and added a changing rich presence :)
+End of changelog
+Version 2.8.0
+- Added "randpass" (it generates a random pass :O!)
+End of changelog
+Version 2.9.0
+- Added "copypasta"
+End of changelog
+Version 2.10.0
+- Removed "copypasta". Reddit sucks
+End of changelog
+Version 2.10.1
+- Fixed bugs with "randpass"
+End of changelog
+Version 2.11.0
+- Added "rat"
+End of changelog
+Version 2.11.1
+- Fixed "randomcam" sometimes giving error in console and thus not sending the image
+End of changelog
+Version 2.12.0
+- Now you can check previous changelogs (use latest for latest changelog)
+- Every <t:1702915200:t>, a message about a QOTD will be sent (unless I forget or replit decides to be homosexual)
+End of changelog
+Version 2.12.1
+- Fixed "changelog" giving an error if no changelogs were found
+End of changelog
+Version 2.13.0
+- Added "getnitro"
+End of changelog
+Version 2.14.0
+- Changed bot's RPC, if you'd like to appear on it DM me your YT channel and your favorite video of yours
+End of changelog
+Version 2.15.0
+- Updated "gd"
+End of changelog
+Version 2.16.0
+- Added "duel"
+End of changelog
+Version 2.17.0
+- Added easter egg when dueling a specific user :)
+End of changelog
+Version 2.17.1
+- Fixed typo in "duel"
+End of changelog
+Version 2.18.0
+- Added channel cooldown to "duel"
+End of changelog
+Version 2.19.0
+- Added twovb to RPC :D
+End of changelog
+Version 2.20.0
+- "nitrogen" now actually works
+End of changelog
+Version 2.21.0
+- Added "linkbypass"
+End of changelog
+Version 2.22.0
+- Added "kiss"
+End of changelog
+Version 2.23.0
+- Added "genacc" (keep in mind this shit will probably give non working accounts, made for fun)
+End of changelog
+Version 2.24.0
+- El bot ahora es grasoso ("papu" was added)
+End of changelog
+Version 2.25.0
+- Added "hug"
+End of changelog
+Version 2.26.0
+- Added "cat"
+End of changelog
+Version 2.26.1
+- Recoded "linkbypass", now it should work more efficiently and with more shorteners support. It's command description has also been changed
+End of changelog
+Version 2.27.0
+- Added "blahaj"
+End of changelog
+Version 2.28.0
+- Leveling has been implemented, talk in chat to gain XP. Planning to add some sort of leaderboard command later
+- Renamed "level" to "battlepass"
+- Added "level" to check your current XP level, position in leaderboards, and messages registered (spamming won't increase your stats)
+End of changelog
+Version 2.29.0
+- Added "leaderboards". Returns the Top 10 users with the highest XP
+End of changelog
+Version 2.30.0
+- Every 10 hours, a message will be sent, whoever clicks it receives an XP boost
+- Added "screw_you", available to people with permission "manage nicknames" only
+End of changelog
+Version 2.31.0
+- XP Boost message cooldown has been set to 4 hours instead of 10
+- Every 6 hours, a message with a math problem will be sent, whoever answers correctly first receives an XP Boost
+End of changelog
+Version 2.31.1
+- Cooldowns increased to 8h and 10h
+End of changelog
+Version 2.31.2
+- Claim buttons _should_ be faster
+- Did some changes to the embeds' footers
+- Also removed the timeout
+End of changelog
+Version 2.31.3
+- Math XP Boost answer now limits to 2 decimals
+- Also made those 2 embeds less fat
+End of changelog
+Version 2.31.4
+- Fixed embeds' interactions timeout
+End of changelog
+Version 2.32.0
+- Removed all commands related to the OperaGX promo, the idiots finally patched it
+- Now on math questions you should be able to skip the 0 if the answer < 1 and >= 0 (i.e. 0.45 is valid aswell as .45)
+- Now on math questions you can use ',' instead of '.'
+End of changelog
+Version 2.32.1
+- Fixed a glitch that allowed multiple people to answer to the same math question
+- Also same glitch for clicking the xp boost one
+- Fixed whole numbers not working as answers on divisions
+End of changelog
+Version 2.32.2
+- Suggestions and anonymous messages now have a 2000 character limit. Thanks tokaua for breaking it
+End of changelog
+Version 2.32.3
+- Fixed a glitch in math question with decimal values
+End of changelog
+Version 2.33.0
+- Instead of always the Math question, there's a chance of another minigame spawning!
+End of changelog
+Version 2.34.0
+- The embed showcasing the winner of the minigame is now a mentionable like string insead of their display name
+- Fixed a typo when a user won a Math minigame
+- Added a footer for the 'mystery' minigame's beaten embed
+- Added the winner of a minigame's avatar as the beaten embed's thumbnail
+- Added a new minigame
+End of changelog
+Version 2.35.0
+- Now if a user sends an animated emoji (from the message's guild), the bot will try to replace that text to include the animated emoji using a Webhook. Even though it _kind of_ works on replies, it is not recommended to use it while replying (it looks ugly)
+- The bot will now try to detect Discord bot tokens, if found it will automatically upload them to Github. If a leak happens it is still recommended to reset the token.
+End of changelog
+Version 2.36.0
+- osu! commands are now async
+- Fortnite commands are now async
+- "randomcam" is now async
+- "randpass" is now async
+- "rat" is now async
+- "cat" is now async
+- "kiss" is now async
+- "hug" is now async
+- "blahaj" is now async
+- "duel"'s json is now async
+- "bypassurl" is now async
+- "isgdout" is now async
+- Question minigame's json is now async
+- "changelog" is now async
+- "genacc" is now async
+- osu! commands now send an embed with some cool features in some
+- Added "pp"
+- "randomcam" now sends an embed
+- Fortnite commands now send embeds with some cool features in some
+- Fixed a glitch in "imgstats" wheter bot will scream if no username was found
+- Fixed a typo in the "stats" command's description
+- Fixed the length of "dm"'s dm not being the proper one
+- Fixed the length of "suggest"'s suggestion not being the proper one
+- "duel" now sends a mention (doesn't ping) instead of the user name
+- "dm" now sends an embed
+- "suggest" now returns an ephemeral response
+- "suggest" now sends an embed
+- "changelog" now defaults to latest
+- All usable commands now have description
+End of changelog
+Version 2.36.1
+- Fixed a glitch in "stats"
+End of changelog
+Version 2.36.2
+- Fixed "battlepass" not working
+End of changelog
+Version 2.37.0
+- Added "platformcheck"
+End of changelog
+Version 2.37.1
+- XP is now async
+End of changelog
+Version 2.37.2
+- Discord changed the premium_type key in users so it now requires OAuth2. Therefore to use animated emojis instead of using `:emojiname:` you should instead use `_emojiname_`
+End of changelog
+Version 2.38.0
+- It _should_ be extremely difficult for a minigame to accidentaly have more than 1 winner because of lag. DM me if this happens
+End of changelog
+Version 2.38.1
+- Fixed questions not working properly
+End of changelog
+Version 2.38.2
+- Overall improvements on the mystery minigame
+End of changelog
+Version 2.38.3
+- More fixes to minigames jajajaja
+End of changelog
+Version 2.39.0
+- Added "create_embed"
+- Added "embed"
+- Added "delete_embed"
+End of changelog
