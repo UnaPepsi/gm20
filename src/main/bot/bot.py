@@ -48,6 +48,7 @@ def run_discord_bot():
 			@discord.ui.select(cls=discord.ui.Select,placeholder='Edit the embed',
 				options=[
 					discord.SelectOption(label='General Embed',emoji='\N{PAGE FACING UP}',description='Edits general values of the embed',value='general'),
+					discord.SelectOption(label='Images',emoji='\N{FRAME WITH PICTURE}',description="Edits the embed's shown images",value='img'),
 					discord.SelectOption(label='Author',emoji='\N{MEMO}',description='Edits author values',value='author'),
 					discord.SelectOption(label='Add field',emoji='<:plus_sign:1232874335107285063>',description='Adds a field to the embed',value='add'),
 					discord.SelectOption(label='Remove field',emoji='<:minus:1232879295001526292>',description='Removes a field to the embed',value='remove'),
@@ -69,8 +70,11 @@ def run_discord_bot():
 					'general':{
 						'title':embed.title,
 						'description':embed.description,
+						'url':embed.url,
+					},
+					'img':{
 						'url':embed.image.url,
-						'thumbnail':embed.thumbnail.url,
+						'thumbnail':embed.thumbnail.url
 					},
 					'author':{
 						'name':embed.author.name,
@@ -86,6 +90,7 @@ def run_discord_bot():
 				place_holders['general']['color']=returncolors.rgb_to_hex(embed.color.r,embed.color.g,embed.color.b) if embed.color is not None else None
 				options: dict[str,discord.ui.Modal] = {
 					'general':EditEmbed.EmbedPrompt(place_holders=place_holders["general"]),
+					'img':EditEmbed.EmbedURL(place_holders=place_holders["img"]),
 					'author':EditEmbed.EmbedAuthor(place_holders=place_holders["author"]),
 					'add':EditEmbed.EmbedFields.AddField(),
 					'remove':EditEmbed.EmbedFields.RemoveField(),
@@ -107,6 +112,9 @@ def run_discord_bot():
 			@discord.ui.button(label='Upload with big image',style=discord.ButtonStyle.primary)
 			async def upload_big(self, interaction: discord.Interaction, button: discord.Button):
 				try:
+					embed = interaction.message.embeds[0]
+					try: embed.color.value
+					except AttributeError: embed.color = discord.Colour.dark_embed()
 					html = f"""
 					<!DOCTYPE html>
 					<html lang="en">
@@ -114,12 +122,12 @@ def run_discord_bot():
 						<meta charset="UTF-8">
 						<meta name="viewport" content="width=device-width, initial-scale=1.0">
 						<meta property="og:type" content="website">
-						<meta property="og:url" content="{interaction.message.embeds[0].url}">
-						<meta property="og:title" content="{interaction.message.embeds[0].title}">
-						<meta property="og:description" content="{interaction.message.embeds[0].description}">
-						<meta property="og:image" content="{interaction.message.embeds[0].image.url}">
+						<meta property="og:url" content="{embed.url}">
+						<meta property="og:title" content="{embed.title}">
+						<meta property="og:description" content="{embed.description}">
+						<meta property="og:image" content="{embed.image.url}">
 						<meta name="twitter:card" content="summary_large_image">
-						<meta name="theme-color" data-react-helmet="true" content="#{hex(interaction.message.embeds[0].colour.value)[2:]}">
+						<meta name="theme-color" data-react-helmet="true" content="#{hex(embed.colour.value)[2:]}">
 						<title>:v</title>
 					</head>
 					<body>
@@ -134,6 +142,9 @@ def run_discord_bot():
 			@discord.ui.button(label='Upload with thumbnail',style=discord.ButtonStyle.primary)
 			async def upload_thumb(self, interaction: discord.Interaction, button: discord.Button):
 				try:
+					embed = interaction.message.embeds[0]
+					try: embed.color.value
+					except AttributeError: embed.color = discord.Colour.dark_embed()
 					html = f"""
 					<!DOCTYPE html>
 					<html lang="en">
@@ -141,11 +152,11 @@ def run_discord_bot():
 						<meta charset="UTF-8">
 						<meta name="viewport" content="width=device-width, initial-scale=1.0">
 						<meta property="og:type" content="website">
-						<meta property="og:url" content="{interaction.message.embeds[0].url}">
-						<meta property="og:title" content="{interaction.message.embeds[0].title}">
-						<meta property="og:description" content="{interaction.message.embeds[0].description}">
-						<meta property="og:image" content="{interaction.message.embeds[0].image.url}">
-						<meta name="theme-color" data-react-helmet="true" content="#{hex(interaction.message.embeds[0].colour.value)[2:]}">
+						<meta property="og:url" content="{embed.url}">
+						<meta property="og:title" content="{embed.title}">
+						<meta property="og:description" content="{embed.description}">
+						<meta property="og:image" content="{embed.image.url}">
+						<meta name="theme-color" data-react-helmet="true" content="#{hex(embed.colour.value)[2:]}">
 						<title>:v</title>
 					</head>
 					<body>
@@ -290,6 +301,32 @@ def run_discord_bot():
 				try: embed.timestamp = datetime.fromtimestamp(int(self.timestamp_.value))
 				except (ValueError,OSError): embed.timestamp = None
 				await interaction.response.edit_message(embed=embed)
+		class EmbedURL(discord.ui.Modal,title='Edit the images!'):
+			url_ = discord.ui.TextInput(
+				label = 'Image URL',style=discord.TextStyle.short,
+				required = False,placeholder = 'Must be HTTP(S) format')
+			thumbnail_ = discord.ui.TextInput(
+				label = 'Thumbnail URL',style=discord.TextStyle.short,
+				required = False,placeholder = 'Must be HTTP(S) format')
+			def __init__(self, place_holders: dict[str,str]):
+				super().__init__()
+				self.url_.default = place_holders['url']
+				self.thumbnail_.default = place_holders['thumbnail']
+			async def on_submit(self, interaction: discord.Interaction):
+				valid_url = re.compile(r'http[s]?://(?:[a-zA-Z]|[0-9]|[$-_@.&+]|[!*(),]|(?:%[0-9a-fA-F][0-9a-fA-F]))+')
+				try:
+					embed = interaction.message.embeds[0]
+				except IndexError:
+					await interaction.response.send_message("Something wrong happened",ephemeral=True)
+				if valid_url.match(self.url_.value):
+					embed.set_image(url=self.url_.value)
+				else:
+					embed.set_image(url=None)
+				if valid_url.match(self.thumbnail_.value):
+					embed.set_thumbnail(url=self.thumbnail_.value)
+				else:
+					embed.set_thumbnail(url=None)
+				await interaction.response.edit_message(embed=embed)
 		class EmbedPrompt(discord.ui.Modal,title='Edit the embed!'):
 			title_ = discord.ui.TextInput(
 				label = 'Title',style=discord.TextStyle.short,max_length=256,
@@ -298,10 +335,7 @@ def run_discord_bot():
 				label = 'Description',style=discord.TextStyle.long,
 				required = False,placeholder = 'Your description here. Up to 4000 characters',max_length=4000)
 			url_ = discord.ui.TextInput(
-				label = 'Image URL',style=discord.TextStyle.short,
-				required = False,placeholder = 'Must be HTTP(S) format')
-			thumbnail_ = discord.ui.TextInput(
-				label = 'Thumbnail URL',style=discord.TextStyle.short,
+				label = 'Title URL',style=discord.TextStyle.short,
 				required = False,placeholder = 'Must be HTTP(S) format')
 			color_ = discord.ui.TextInput(
 				label= 'Color',style=discord.TextStyle.short,
@@ -312,7 +346,6 @@ def run_discord_bot():
 				self.title_.default = place_holders['title']
 				self.description_.default = place_holders['description']
 				self.url_.default = place_holders['url']
-				self.thumbnail_.default = place_holders['thumbnail']
 				self.color_.default = place_holders['color']
 			async def on_submit(self, interaction: discord.Interaction):
 				if not (self.title_.value or self.description_.value or self.url_.value or self.thumbnail_.value):
@@ -337,14 +370,10 @@ def run_discord_bot():
 				# 	description = self.description_.value,
 				# 	color=color_sel
 				# )
-				if valid_url.match(self.thumbnail_.value):
-					embed.set_thumbnail(url=self.thumbnail_.value)
-				else:
-					embed.set_thumbnail(url=None)
 				if valid_url.match(self.url_.value):
-					embed.set_image(url=self.url_.value)
+					embed.url = self.url_.value
 				else:
-					embed.set_image(url=None)
+					embed.url = None
 				if await EditEmbed.size_check(embed):
 					await interaction.response.send_message("Discord limits embeds to not be larger than 6000 characters in total",ephemeral=True)
 					return
