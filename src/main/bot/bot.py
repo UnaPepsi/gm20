@@ -1,5 +1,5 @@
 import discord,os,typing,time
-from resources import botchangelog,fortnite,oss,randompass,tenor,illumes,fight,bypassurl,alts,levels,gists,returncolors
+from resources import botchangelog,fortnite,oss,randompass,tenor,illumes,fight,bypassurl,alts,levels,gists,returncolors,virustotal
 from random import randint,choice,random
 from asyncio import sleep
 from requests import get
@@ -1434,5 +1434,73 @@ def run_discord_bot():
 				await interaction.response.send_message('Embed sent',ephemeral=True)
 			except discord.Forbidden:
 				await interaction.response.send_message("Couldn't send embed",ephemeral=True)
+	@send_embed.error
+	async def send_embed_error(interaction: discord.Interaction, error: discord.app_commands.AppCommandError):
+		if isinstance(error,discord.app_commands.MissingPermissions):
+			await interaction.response.send_message("You don't have permission to do this",ephemeral=True)
+		else:
+			raise error
+	@client.tree.context_menu(name='Scan File')
+	async def scan_file(interaction: discord.Interaction, message: discord.Message):
+		if len(message.attachments) == 0:
+			await interaction.response.send_message('Message has to contain 1 file')
+			return
+		await interaction.response.defer()
+		fbytes = await message.attachments[0].read()
+		async with virustotal.VirusTotal() as vt:
+			file_report = await vt.hash_file_bytes(fbytes)
+			try:
+				freport = await vt.check_file_report(file_report)
+			except virustotal.NoFile:
+				try:
+					resp = await vt.upload_file(fbytes)
+				except virustotal.UploadError:
+					await interaction.followup.send('Bad file or VirusTotal already ratelimited me lol')
+					return
+				try:
+					# report = await vt.get_report(resp['data']['id'])
+					# print(report['meta']['file_info']['size'])
+					await sleep(7)
+					freport = await vt.check_file_report(file_report)
+				except virustotal.NoFile:
+					await interaction.followup.send('Something wrong happened. File still uploading most likely')
+					return
+			analysis_data = freport['data']['attributes']['last_analysis_stats']
+			size = freport['data']['attributes'].get('size',0)/(1024*1024)
+		# try:
+		# 	data = await virustotal.scan_file(file=await message.attachments[0].read())
+		# except virustotal.UploadError as e:
+		# 	await interaction.followup.send("Couldn't scan that file, either bad file or VirusTotal already rate limited me lol")
+		# 	return
+		# except virustotal.MissURL as e:
+		# 	await interaction.followup.send("Something wrong happened")
+		# 	return
+		embed = discord.Embed(
+			title = 'File Scan Report',
+			description='',
+			url = f'https://www.virustotal.com/gui/file/{file_report}'
+			# url=data['data']['links']['item'].replace('https://www.virustotal.com/api/v3/files/','https://www.virustotal.com/gui/file/') 
+		)
+		for item,_ in zip(analysis_data,range(0,5)):
+			embed.description += f"**{item.title()}**: {analysis_data.get(item)}\t"
+		if analysis_data.get('malicious') != 0:
+			embed.colour = discord.Colour.red()
+		elif analysis_data.get('suspicious') != 0:
+			embed.colour = discord.Colour.yellow()
+		else:
+			embed.colour = discord.Colour.green()
+		embed.add_field(name='Scan link',value=f'https://www.virustotal.com/gui/file/{file_report}')
+		embed.add_field(name='SHA-256',value=f'{file_report}')
+		embed.add_field(name='Size',value=f"{size:.2f} MB")
+		embed.add_field(name='Malicious',value=f"{analysis_data.get('malicious') != 0}")
+		embed.add_field(name='Suspicious',value=f"{analysis_data.get('suspicious') != 0}")
+		embed.add_field(name='Harmless',value=f"{analysis_data.get('malicious') == 0 and analysis_data.get('suspicious') == 0}")
+		# embed.add_field(name='Size',value=f"{data['meta']['file_info']['size']/(1024*1024):.2f} MB")
+		# embed.add_field(name='Malicious',value=f"{info_scan.get('malicious') != 0}")
+		# embed.add_field(name='Suspicious',value=f"{info_scan.get('suspicious') != 0}")
+		# embed.add_field(name='Harmless',value=f"{info_scan.get('malicious') == 0 and info_scan.get('suspicious') == 0}")
+		await interaction.followup.send(embed=embed)
+		await message.reply('Scanned this',mention_author=False)
+
 
 	client.run(os.environ['TOKEN'])
