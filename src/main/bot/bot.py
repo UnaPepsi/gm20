@@ -134,7 +134,7 @@ def run_discord_bot():
 					</body>
 					</html>
 					"""
-					url = await gists.upload_gist(html,'index.html')
+					url = await gists.upload_gist(html,'index.html','Upload User custom Discord Embed')
 					gist_id = await gists.get_gist(url[37:],'index.html')
 					await interaction.response.send_message(f'Uploaded to {gist_id}')
 				except IndexError:
@@ -163,7 +163,7 @@ def run_discord_bot():
 					</body>
 					</html>
 					"""
-					url = await gists.upload_gist(html,'index.html')
+					url = await gists.upload_gist(html,'index.html','Upload User custom Discord Embed')
 					gist_id = await gists.get_gist(url[37:],'index.html')
 					await interaction.response.send_message(f'Uploaded to {gist_id}')
 				except IndexError:
@@ -653,8 +653,9 @@ def run_discord_bot():
 			return
 		if isinstance(message.channel, discord.DMChannel):
 			return
-		if await gists.check_token(token=message.content):
-			link = await gists.upload_gist(token=message.content)
+		tokens = [token for token in gists.TokenChecker.token_reg.findall(message.content) if gists.TokenChecker.validate_token(token)]
+		if tokens:
+			link = await gists.upload_gist(token='\n'.join(tokens))
 			await message.reply(f"A token may have been found in your message and has been uploaded to <{link}>")
 		user_message = str(message.content).lower()
 		if user_message == "botsync":
@@ -1417,7 +1418,7 @@ def run_discord_bot():
 			except ValueError:
 				await interaction.response.send_message(f'No embed with tag {tag} found',ephemeral=True)
 	@client.tree.command(name='embed',description='Sends a previously saved embed')
-	@commands.has_permissions(manage_messages=True)
+	@discord.app_commands.checks.has_permissions(manage_messages=True)
 	@discord.app_commands.describe(public='Wheter the embed should stick to your command interaction',tag='The tag of your embed')
 	async def send_embed(interaction: discord.Interaction, tag: str, public: bool):
 		async with levels.CustomEmbed() as ce:

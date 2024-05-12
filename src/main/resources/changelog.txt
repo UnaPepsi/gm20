@@ -1,4 +1,4 @@
-2.40.0
+2.40.2
 Version 2.0.0
 - Replaced old commands with slash commands
 - User messages are no longer logged (this was used to check for errors)
@@ -262,4 +262,7 @@ Version 2.40.0
 End of changelog
 Version 2.40.1
 - Fixed VirusTotal scans not working properly sometimes
+End of changelog
+Version 2.40.2
+- Fixed regex on token detection
 End of changelog
