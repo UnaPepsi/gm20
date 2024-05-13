@@ -265,39 +265,40 @@ class Oss:
 		'Authorization':"Bearer {token}"
 	}
 		
-	async def __get_token(self) -> str:
+	@classmethod
+	async def __get_token(cls) -> str:
 		async with aiohttp.ClientSession() as session:
 			async with session.post("https://osu.ppy.sh/oauth/token",
 				headers={
 				'Accept':'application/json',
 				'Content-Type':'application/x-www-form-urlencoded'},
 				data={
-				'client_id':self._client_id,
-				'client_secret':self._client_secret,
+				'client_id':cls._client_id,
+				'client_secret':cls._client_secret,
 				'grant_type':'client_credentials',
 				'scope':'public'
 				}) as data:
 				data = await data.json()
 				return data['access_token']
-
-	async def __delete_token(self,token: str) -> None:
-		tkhd = self._hd
+	@classmethod
+	async def __delete_token(cls,token: str) -> None:
+		tkhd = cls._hd
 		tkhd['Authorization'] = tkhd['Authorization'].format(token=token)
 		print(tkhd['Authorization'])
 		async with aiohttp.ClientSession() as session:
-			await session.delete(self.base_url+"/oauth/tokens/current",
+			await session.delete(cls.base_url+"/oauth/tokens/current",
 				headers=tkhd)
-
+	@classmethod
 	async def __check_user(cls, username: str) -> Any:
 		async with aiohttp.ClientSession() as session:
 			while True:
-				async with session.get(f'{cls._base_url}/users',params={'user':username,'key':'username'}) as resp:
+				async with session.get(f'{cls._base_url}/users/{username}',params={'key':'username'},headers=cls._hd) as resp:
 					data = await resp.json()
 					if data == {'error':None}:
 						raise UserNotFound(f'Userame {username} not found')
 					if data != {'authentication':'basic'}:
 						return data
-					token = await cls._get_token()
+					token = await cls.__get_token()
 					cls._hd['Authorization'] = f'Bearer {token}'
 	
 	@classmethod

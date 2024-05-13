@@ -2,7 +2,7 @@ import discord
 from discord import app_commands
 from discord.ext import commands, tasks
 from random import choice, randint
-from resources import levels
+from resources import levels, customEmbed
 from time import localtime, time
 from asyncio import sleep
 from aiohttp import ClientSession
@@ -21,6 +21,15 @@ status = {"pepsi":"https://www.youtube.com/watch?v=nEHQiHGYZ0s",
 class MiscCog(commands.Cog):
 	def __init__(self, bot: commands.Bot):
 		self.bot = bot
+		self.ctx_menu = app_commands.ContextMenu(
+			name='Scan File',
+			callback=self.scan_file,
+		)
+		self.bot.tree.add_command(self.ctx_menu)
+
+	async def cog_unload(self) -> None:
+		self.bot.tree.remove_command(self.ctx_menu.name, type=self.ctx_menu.type)
+
 
 	@commands.Cog.listener()
 	async def on_ready(self):
@@ -30,7 +39,7 @@ class MiscCog(commands.Cog):
 			await f.make_table()
 		async with levels.MiniGame() as mg:
 			await mg.make_table()
-		async with levels.CustomEmbed() as ce:
+		async with customEmbed.CustomEmbed() as ce:
 			await ce.make_table()
 
 	@tasks.loop(minutes=5)
@@ -62,11 +71,11 @@ class MiscCog(commands.Cog):
 		await interaction.response.defer()
 		randNum= randint(1,9999)
 		find=[]
-		actual_time = time.time()
+		actual_time = time()
 		async with ClientSession() as session:
 			while True:
 				await sleep(0)
-				if time.time() - actual_time > 10:
+				if time() - actual_time > 10:
 					await interaction.followup.send("Took too long, try again",ephemeral=True)
 					break
 				async with session.get(f"http://www.opentopia.com/webcam/{randNum}") as resp:
@@ -169,7 +178,7 @@ class MiscCog(commands.Cog):
 		if opponent == self.bot.user:
 			await interaction.response.send_message("Oh? You're approaching me? Instead of running away, you come right to me? Even though your grandfather, Joseph, told you the secret of The World, like an exam student scrambling to finish the problems on an exam until the last moments before the chime?")
 			return
-		data = await json_utils.start_duel(interaction.user.mention,opponent.mention)
+		data = json_utils.start_duel(interaction.user.mention,opponent.mention)
 		channel = interaction.channel
 		await interaction.response.send_message(f"Starting duel between <@{interaction.user.id}> and <@{opponent.id}>")
 		await sleep(2)
@@ -256,11 +265,7 @@ class MiscCog(commands.Cog):
 	@app_commands.command(description="Screw someone's name fora certain period of time")
 	@app_commands.describe(user="The user to screw with",seconds="The amount of time to mess with them. 20 secs max")
 	async def screw_you(self, interaction: discord.Interaction, user: discord.User, seconds: int):
-		perms = interaction.permissions
 		user_nick = user.display_name
-		if not perms.manage_nicknames:
-			await interaction.response.send_message("No permission",ephemeral=True)
-			return
 		if seconds > 20:
 			await interaction.response.send_message("Too long!",ephemeral=True)
 			return
@@ -279,8 +284,8 @@ class MiscCog(commands.Cog):
 		zalgo = "ḁ̵͈̠̘͑͋á̵̯̏̾̈A̸̯͎̪̯͆̌Á̸̻̼̒̕b̶̖̋͌̉B̶̛̘͓̝̅̕͠c̶̢̭͔̆͘C̷̱̦̹͙̎̉̚̕ç̶̹̊̚Ç̸̡̛͔̖̄̑̎ͅd̷̳͐͐̄D̸̨̝̗̎e̸̲̘̓̅̈́é̷̙̿́̿͠E̴̳͛͝É̷͎͍̈́f̷̬̹̻̒̎͌̂F̶̘̒̓͌g̶̜͎͖̎G̶̞̞̤̈h̶̗͚̠̒͒͜H̶̭͒î̴̩͔͉̤͗͗͊í̵̞̳͕̞͂͑͘Í̸̬͖͌̽͜Í̷͕͖̄j̵̩͉̳̘̽J̶͎̈́k̴̢̨̯̭͐K̸͖͇̈l̸̤̟̤̑̄L̷̠͖̙͚̽͆̇m̶̤̈̋͝M̴̤̬͂ñ̶̥͐̅̈Ń̵̯ñ̷̻̰̈́͛̔Ñ̸̡͒ͅo̴͖͐̀͝͝ó̷͉̓̋̎͝O̸̟̔Ó̶̥͒̅͐ͅp̸̣͖͇̀͑̾̔P̶̡̺̭͖̐̄͝q̸̥͆̀Q̷̪̲̼̇̿r̸̫̫̃̀̍̎R̵͈͝s̷̘͍͒ͅS̸̟̝̑̌ṱ̴̙̼̍Ṭ̵̥̱̂̆́̓ũ̸͙̳̪̿͆̚ú̵̟̮̖̬̽̐Ű̴͔͍̯̤̏͝Ú̸̘̞̲̂̓̑̈́ü̴̢̃̆̀Ü̸̹̒̔̆̕v̸̧̧͌̊͜ͅV̴̨̩̩̄́̔́ẃ̶͎̍W̶̢͔̫͆͜x̴̰͙̖͗́X̶̦̉͗y̵̩͑Y̴̺͋ý̸̠̭͕̮̿͝Y̷̨͈̾͌͠z̵̢̼͍̮͋̊͒Z̵̙̖̯͗̊̐0̵̢͍̰̙̌̊͆̈́1̶̙̖̲͉̉͑̊2̴͍̜̪́̓3̵͈̌̾͛͝4̴̲̭̊̂̿5̵̬̰̃̈͊6̴̬̬̖͕͆͒7̶͕̖̿ͅ8̶̭͔̒9̸̣̬̖̜̔̒͘"
 
 
-		start_time = time.time() + seconds
-		while start_time > time.time():
+		start_time = time() + seconds
+		while start_time > time():
 			new_nick = ""
 			for i in range(50):
 				new_nick += zalgo[randint(0,len(zalgo)-1)]
@@ -292,7 +297,8 @@ class MiscCog(commands.Cog):
 			await sleep(2)
 		try:
 			await user.edit(nick=f"{user_nick}")
-		except:
+		except Exception as e:
+			print(e)
 			pass
 	@screw_you.error
 	async def screw_you_error(self, interaction: discord.Interaction, error: discord.app_commands.AppCommandError):
@@ -319,7 +325,6 @@ class MiscCog(commands.Cog):
 		resp = f'{user.mention} is on mobile' if user.is_on_mobile() else f'{user.mention} is not on mobile (desktop/browser)'
 		await interaction.response.send_message(resp,allowed_mentions=discord.AllowedMentions.none())
 
-	@app_commands.context_menu(name='Scan File')
 	async def scan_file(self, interaction: discord.Interaction, message: discord.Message):
 		if len(message.attachments) == 0:
 			await interaction.response.send_message('Message has to contain 1 file')
@@ -387,6 +392,15 @@ class MiscCog(commands.Cog):
 		await ctx.message.add_reaction(self.bot.get_emoji(1202076732354465852))
 		await ctx.message.add_reaction(self.bot.get_emoji(1202076748486021200))
 		await ctx.message.add_reaction(self.bot.get_emoji(1202076768442523668))
+	@sync_commands.error
+	async def sync_cmds_error(self, ctx: commands.Context, error: commands.CommandError):
+		if isinstance(error,commands.CommandOnCooldown):
+			if ctx.author.id == 624277615951216643:
+				await ctx.reply("Command is being spammed, but I'll sync")
+				self.bot.tree.sync()
+				await ctx.reply('Done!')
+		else: raise error
+
 
 async def setup(bot: commands.Cog):
 	await bot.add_cog(MiscCog(bot))

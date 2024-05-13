@@ -8,20 +8,20 @@ class FortniteCog(commands.GroupCog,name='fortnite'):
 	def __init__(self, bot: commands.Bot):
 		self.bot = bot
 
-	@app_commands.command(description="Gets someone's BattlePass level")
 	@app_commands.describe(username="The Fortnite user you'd like to check")
-	async def level(interaction: discord.Interaction,username: str):
+	@app_commands.command(description="Gets someone's BattlePass level")
+	async def level(self, interaction: discord.Interaction,username: str):
 		try:
-			level,progress = await Fortnite.get_bp_level(username)
-			await interaction.response.send_message(f"{username}'s BattlePass is at level {level} (progress: {progress})")
+			info = await Fortnite.get_bp_level(username)
+			await interaction.response.send_message(f"{username}'s BattlePass is at level {info['level']} (progress: {info['progress']})")
 		except UserNotFound:
 			await interaction.response.send_message(f"Username {username} not found")
-	@app_commands.command(description="Gets someone's specific Fortnite stat")
 	@app_commands.describe(username="The Fortnite user you'd like to check",
 								time_window="Wheter to check lifetime stats or season stats",
 								stat="The statistic to check",
 								mode="The gamemode of the stat to check")
-	async def stats(interaction: discord.Interaction,
+	@app_commands.command(description="Gets someone's specific Fortnite stat")
+	async def stats(self, interaction: discord.Interaction,
 				 username: str, time_window: Literal['lifetime','season'],
 				 stat: Literal["score", "scoreperwin", "scorepermatch", "wins", "top3", "top5", "top6", "top10", "top12", "top25", "kills", "killspermin", "killspermatch", "deaths", "kd", "matches", "winrate", "minutesplayed", "playersoutlived"],
 				 mode: Literal["overall", "solo", "duo", "squad", "ltm"]):
@@ -36,6 +36,14 @@ class FortniteCog(commands.GroupCog,name='fortnite'):
 			await interaction.response.send_message(f"Username {username} not found")
 		except KeyError:
 			await interaction.response.send_message(f"Stat not found, most likely not compatible with the mode you selected")
+	
+	@app_commands.describe(username="The Fortnite username to check",time_window="Wheter to receive lifetime or season stats")
+	@app_commands.command(description="Shows someone's Fortnite stats in an image")
+	async def imgstats(self, interaction: discord.Interaction, username: str, time_window: Literal['lifetime','season']):
+		try:
+			await interaction.response.send_message(await Fortnite.get_img_stats(username,time_window))
+		except UserNotFound:
+			await interaction.response.send_message(f"Username {username} not found")
 
 async def setup(bot: commands.Bot):
 	await bot.add_cog(FortniteCog(bot))

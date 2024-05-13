@@ -240,7 +240,7 @@ class QuestionModal(discord.ui.Modal,title="Solve the problem!"):
 			await mg.delete_row(interaction.message.id)
 
 class XPMisc(commands.Cog):
-	def __init__(self, bot: commands.self.bot):
+	def __init__(self, bot: commands.bot):
 		self.bot = bot
 		self.cd_mapping = commands.CooldownMapping.from_cooldown(rate=1,per=3,type=commands.BucketType.user)
 

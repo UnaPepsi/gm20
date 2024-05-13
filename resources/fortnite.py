@@ -5,9 +5,10 @@ class Fortnite:
 	_base_url = 'https://fortnite-api.com/v2/stats/br/v2'
 	_headers={"Authorization":_key}
 
-	async def __get_user(self,params):
+	@classmethod
+	async def __get_user(cls,params):
 		async with aiohttp.ClientSession() as session:
-			async with session.get(self._base_url,headers=self._headers,params=params) as resp:
+			async with session.get(cls._base_url,headers=cls._headers,params=params) as resp:
 				data = await resp.json()
 				if list(data)[1] == "error":
 					raise UserNotFound(f'Username not found')

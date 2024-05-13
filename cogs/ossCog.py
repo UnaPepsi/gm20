@@ -1,4 +1,3 @@
-from typing import AwaitableGenerator
 import discord
 from discord import app_commands
 from discord.ext import commands
@@ -8,9 +7,9 @@ class OssCog(commands.GroupCog,name='osu'):
 	def __init__(self, bot: commands.Bot):
 		self.bot = bot
 
-	@app_commands.command(description="Shows you a list of someone's previous osu! names")
 	@app_commands.describe(username="The username to check")
-	async def pastnames(interaction: discord.Interaction, username: str):
+	@app_commands.command(description="Shows you a list of someone's previous osu! names")
+	async def pastnames(self, interaction: discord.Interaction, username: str):
 		try:
 			info = await Oss.get_previous_usernames(username)
 			embed = discord.Embed(
@@ -21,11 +20,11 @@ class OssCog(commands.GroupCog,name='osu'):
 			for name in info['past_usernames']:
 				embed.description += f'{name}\n'
 			await interaction.response.send_message(embed=embed)
-		except UserNotFound:
+		except (UserNotFound, KeyError):
 			await interaction.response.send_message(f"Username {username} not found")
-	@app_commands.command(description="Shows the country of an osu! user")
 	@app_commands.describe(username="The username to check")
-	async def country(interaction: discord.Interaction, username: str):
+	@app_commands.command(description="Shows the country of an osu! user")
+	async def country(self, interaction: discord.Interaction, username: str):
 		try:
 			country = await Oss.get_country(username)
 			embed = discord.Embed(
@@ -33,11 +32,11 @@ class OssCog(commands.GroupCog,name='osu'):
 				description=f"{country['username']} is registered on **{country['country_name']}** {country['country_code']['flag_emoji']}",
 				colour=country['country_code']['hex_value'])
 			await interaction.response.send_message(embed=embed)
-		except UserNotFound:
+		except (UserNotFound, KeyError):
 			await interaction.response.send_message(f"Username {username} not found")
-	@app_commands.command(description="Shows someone's osu! supporter details")
 	@app_commands.describe(username="The username to check")
-	async def supporter(interaction: discord.Interaction, username: str):
+	@app_commands.command(description="Shows someone's osu! supporter details")
+	async def supporter(self, interaction: discord.Interaction, username: str):
 		try:
 			info = await Oss.get_supported_status(username)
 			if info['is_supporter']:
@@ -46,11 +45,11 @@ class OssCog(commands.GroupCog,name='osu'):
 				await interaction.response.send_message(f"{info['username']} does not have supporter but has supported at least once")
 			else:
 				await interaction.response.send_message(f"{info['username']} does not have supporter nor has ever supported")
-		except UserNotFound:
+		except (UserNotFound, KeyError):
 			await interaction.response.send_message(f"Username {username} not found")
-	@app_commands.command(description="Shows someone's osu! profile picture")
 	@app_commands.describe(username="The username to check")
-	async def pfp(interaction: discord.Interaction, username: str):
+	@app_commands.command(description="Shows someone's osu! profile picture")
+	async def pfp(self, interaction: discord.Interaction, username: str):
 		try:
 			info = await Oss.get_pfp(username)
 			embed=discord.Embed(
@@ -59,11 +58,11 @@ class OssCog(commands.GroupCog,name='osu'):
 			)
 			embed.set_image(url=info['url'])
 			await interaction.response.send_message(embed=embed)
-		except UserNotFound:
+		except (UserNotFound, KeyError):
 			await interaction.response.send_message(f"Username {username} not found")
-	@app_commands.command(description="Shows someone's osu! rank")
 	@app_commands.describe(username="The username to check")
-	async def rank(interaction: discord.Interaction, username: str):
+	@app_commands.command(description="Shows someone's osu! rank")
+	async def rank(self, interaction: discord.Interaction, username: str):
 		try:
 			info = await Oss.get_rank(username)
 			embed=discord.Embed(
@@ -72,11 +71,11 @@ class OssCog(commands.GroupCog,name='osu'):
 				colour=discord.Colour.green()
 			)
 			await interaction.response.send_message(embed=embed)
-		except UserNotFound:
+		except (UserNotFound, KeyError):
 			await interaction.response.send_message(f"Username {username} not found")
-	@app_commands.command(description="Shows someone's highest osu! rank")
 	@app_commands.describe(username="The username to check")
-	async def highestrank(interaction: discord.Interaction, username: str):
+	@app_commands.command(description="Shows someone's highest osu! rank")
+	async def highestrank(self, interaction: discord.Interaction, username: str):
 		try:
 			info = await Oss.get_highest_rank(username)
 			embed = discord.Embed(
@@ -85,29 +84,29 @@ class OssCog(commands.GroupCog,name='osu'):
 				color=discord.Colour.green()
 			)
 			await interaction.response.send_message(embed=embed)
-		except UserNotFound:
+		except (UserNotFound, KeyError):
 			await interaction.response.send_message(f"Username {username} not found")
-	@app_commands.command(description="Shows someone's osu! accuracy")
 	@app_commands.describe(username="The username to check")
-	async def acc(interaction: discord.Interaction, username: str):
+	@app_commands.command(description="Shows someone's osu! accuracy")
+	async def acc(self, interaction: discord.Interaction, username: str):
 		try:
 			info = await Oss.get_acc(username)
 			embed = discord.Embed(
 				title=f"{info['username']}'s accuracy",
 				description=f"{info['username']}'s accuracy: **{info['acc']}%**"
 			)
-			if info[1] >= 90:
+			if info['acc'] >= 90:
 				embed.colour = discord.Colour.green()
-			elif info[1] >= 80:
+			elif info['acc'] >= 80:
 				embed.colour = discord.Colour.yellow()
 			else:
 				embed.colour = discord.Colour.red()
 			await interaction.response.send_message(embed=embed)
 		except UserNotFound:
 			await interaction.response.send_message(f"Username {username} not found")
-	@app_commands.command(description="Shows someone's osu! pp")
 	@app_commands.describe(username="The username to check")
-	async def pp(interaction: discord.Interaction, username: str):
+	@app_commands.command(description="Shows someone's osu! pp")
+	async def pp(self, interaction: discord.Interaction, username: str):
 		try:
 			info = await Oss.get_pp(username)
 			embed = discord.Embed(
