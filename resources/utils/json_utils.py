@@ -1,5 +1,6 @@
 import json,random
-async def start_duel(player_1: str, player_2: str):
+
+def start_duel(player_1: str, player_2: str):
 	with open("resources/files/messages.json","r") as f:
 		data = json.load(f)
 	rand = random.randint(0,1)
@@ -16,7 +17,7 @@ async def start_duel(player_1: str, player_2: str):
 		"death":[random.choice(data['death']).format(victim=victim,attacker=attacker),attacker]
 	}
 
-async def questions(user,id: int,days: int):
+def questions(user,id: int,days: int):
 	with open("resources/files/questionsxp.json","r") as f:
 		data = json.load(f)
 	item: str = random.choice(list(data))

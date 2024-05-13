@@ -1,32 +1,7 @@
-# import requests
-
-# a  =requests.post("https://osu.ppy.sh/oauth/token",headers={
-#     'Accept':'application/json',
-#     'Content-Type':'application/x-www-form-urlencoded'},data={
-#         'client_id':client_id,
-#         'client_secret':client_secret,
-#         'grant_type':'client_credentials',
-#         'scope':'public'
-#     })
-
-# print(a.reason,a.status_code,a.json())
-# token = a.json()['access_token']
-
-# hd = {
-#     'Content-Type':'application/json',
-#     'Accept':'application/json',
-#     'Authorization':f"Bearer {token}"
-# }
-# par={
-#     'key':'username'
-# }
-# b = requests.get(base_url+"/users/PolarKun",headers=hd,params=par)
-
-# print(b.json())
-
+from typing import Any
 import aiohttp
-# import asyncio
 from datetime import datetime
+from os import environ
 
 country_info = {
 	'AD': {'flag_emoji': '🇦🇩', 'hex_value': 0xFF0000},
@@ -280,158 +255,92 @@ country_info = {
 	'ZW': {'flag_emoji': '🇿🇼', 'hex_value': 0xFF0000}
 }
 
-
-
-
-client_id = 28393
-client_secret = "vAOG3ohz1KkitiEukr3qWrHmgEXdglzlY4Eo4535"
-base_url = "https://osu.ppy.sh/api/v2"
-hd = {
-	'Content-Type':'application/json',
-	'Accept':'application/json',
-	'Authorization':"Bearer {token}"
-}
-
-async def get_token() -> str:
-	async with aiohttp.ClientSession() as session:
-		async with session.post("https://osu.ppy.sh/oauth/token",
-			headers={
-			'Accept':'application/json',
-			'Content-Type':'application/x-www-form-urlencoded'},
-			data={
-			'client_id':client_id,
-			'client_secret':client_secret,
-			'grant_type':'client_credentials',
-			'scope':'public'
-			}) as data:
-			data = await data.json()
-			return data['access_token']
-
-async def delete_token(token: str) -> None:
-	tkhd = hd
-	tkhd['Authorization'] = tkhd['Authorization'].format(token=token)
-	print(tkhd['Authorization'])
-	async with aiohttp.ClientSession() as session:
-		await session.delete(base_url+"/oauth/tokens/current",
-			headers=tkhd)
-
-
-async def get_previous_username(username: str) -> tuple[str,list[str]]:
-	global hd
-	async with aiohttp.ClientSession() as session:
-		while True:
-			async with session.get(f"{base_url}/users/{username}",params={'key':'username'},headers=hd) as data:
+class Oss:
+	_client_id = environ['CLIENT_ID']
+	_client_secret = environ['CLIENT_SECRET']
+	_base_url = "https://osu.ppy.sh/api/v2"
+	_hd = {
+		'Content-Type':'application/json',
+		'Accept':'application/json',
+		'Authorization':"Bearer {token}"
+	}
+		
+	async def __get_token(self) -> str:
+		async with aiohttp.ClientSession() as session:
+			async with session.post("https://osu.ppy.sh/oauth/token",
+				headers={
+				'Accept':'application/json',
+				'Content-Type':'application/x-www-form-urlencoded'},
+				data={
+				'client_id':self._client_id,
+				'client_secret':self._client_secret,
+				'grant_type':'client_credentials',
+				'scope':'public'
+				}) as data:
 				data = await data.json()
-				if data == {'error':None}:
-					raise ValueError(f'Username {username} not found')
-				try:
-					return data['username'], data['previous_usernames']
-				except KeyError:
-					token = await get_token()
-					hd['Authorization'] = f'Bearer {token}'
+				return data['access_token']
 
-async def get_country(username: str) -> tuple[str,str,dict[str,str]]:
-	global hd
-	async with aiohttp.ClientSession() as session:
-		while True:
-			async with session.get(f"{base_url}/users/{username}",params={'key':'username'},headers=hd) as data:
-				data = await data.json()
-				if data == {'error':None}:
-					raise ValueError(f'Username {username} not found')
-				try:
-					return data['username'], data['country']['name'], country_info[data['country']['code']]
-				except KeyError:
-					token = await get_token()
-					hd['Authorization'] = f'Bearer {token}'
+	async def __delete_token(self,token: str) -> None:
+		tkhd = self._hd
+		tkhd['Authorization'] = tkhd['Authorization'].format(token=token)
+		print(tkhd['Authorization'])
+		async with aiohttp.ClientSession() as session:
+			await session.delete(self.base_url+"/oauth/tokens/current",
+				headers=tkhd)
 
-async def is_supporter(username: str) -> tuple[str,bool,bool]:
-	global hd
-	async with aiohttp.ClientSession() as session:
-		while True:
-			async with session.get(f"{base_url}/users/{username}",params={'key':'username'},headers=hd) as data:
-				data = await data.json()
-				if data == {'error':None}:
-					raise ValueError(f'Username {username} not found')
-				try:
-					return data['username'], data['is_supporter'], data['has_supported']
-				except KeyError:
-					token = await get_token()
-					hd['Authorization'] = f'Bearer {token}'
+	async def __check_user(cls, username: str) -> Any:
+		async with aiohttp.ClientSession() as session:
+			while True:
+				async with session.get(f'{cls._base_url}/users',params={'user':username,'key':'username'}) as resp:
+					data = await resp.json()
+					if data == {'error':None}:
+						raise UserNotFound(f'Userame {username} not found')
+					if data != {'authentication':'basic'}:
+						return data
+					token = await cls._get_token()
+					cls._hd['Authorization'] = f'Bearer {token}'
 	
-async def pfp(username: str) -> tuple[str,str]:
-	global hd
-	async with aiohttp.ClientSession() as session:
-		while True:
-			async with session.get(f"{base_url}/users/{username}",params={'key':'username'},headers=hd) as data:
-				data = await data.json()
-				if data == {'error':None}:
-					raise ValueError(f'Username {username} not found')
-				try:
-					return data['username'], data['avatar_url']
-				except KeyError:
-					token = await get_token()
-					hd['Authorization'] = f'Bearer {token}'
+	@classmethod
+	async def get_previous_usernames(cls,username: str) -> dict[str,str|list[str]]:
+		data = await cls.__check_user(username)
+		return {'username':data['username'],'past_usernames':data['previous_usernames']}
 
-async def rank(username: str) -> tuple[str,int,int]:
-	global hd
-	async with aiohttp.ClientSession() as session:
-		while True:
-			async with session.get(f"{base_url}/users/{username}",params={'key':'username'},headers=hd) as data:
-				data = await data.json()
-				if data == {'error':None}:
-					raise ValueError(f'Username {username} not found')
-				try:
-					return data['username'], data['statistics']['global_rank'], data['statistics']['country_rank']
-				except KeyError:
-					token = await get_token()
-					hd['Authorization'] = f'Bearer {token}'
+	@classmethod
+	async def get_pp(cls,username: str) -> dict[str,str|float]:
+		data = await cls.__check_user(username)
+		return {'username':data['username'],'pp':data['statistics']['pp']}
 
-async def highest_rank(username: str) -> tuple[str,int,int]:
-	global hd
-	async with aiohttp.ClientSession() as session:
-		while True:
-			async with session.get(f"{base_url}/users/{username}",params={'key':'username'},headers=hd) as data:
-				data = await data.json()
-				if data == {'error':None}:
-					raise ValueError(f'Username {username} not found')
-				try:
-					data['rank_highest']['updated_at'] = int(datetime.strptime(data['rank_highest']['updated_at'],"%Y-%m-%dT%H:%M:%SZ").timestamp())
-					return data['username'], data['rank_highest']['rank'], data['rank_highest']['updated_at']
-				except KeyError:
-					token = await get_token()
-					hd['Authorization'] = f'Bearer {token}'
+	@classmethod
+	async def get_acc(cls,username: str) -> dict[str,str|float]:
+		data = await cls.__check_user(username)
+		return {'username':data['username'],'acc':data['statistics']['hit_accuracy']}
 
-async def acc(username: str) -> tuple[str,float]:
-	global hd
-	async with aiohttp.ClientSession() as session:
-		while True:
-			async with session.get(f"{base_url}/users/{username}",params={'key':'username'},headers=hd) as data:
-				data = await data.json()
-				if data == {'error':None}:
-					raise ValueError(f'Username {username} not found')
-				try:
-					return data['username'], data['statistics']['hit_accuracy']
-				except KeyError:
-					token = await get_token()
-					hd['Authorization'] = f'Bearer {token}'
+	@classmethod
+	async def get_highest_rank(cls,username: str) -> dict[str,str|int]:
+		data = await cls.__check_user(username)
+		timestamp = int(datetime.strptime(data['rank_highest']['updated_at'],"%Y-%m-%dT%H:%M:%SZ").timestamp())
+		return {'username':data['username'],'rank':data['rank_highest']['rank'],'timestamp':timestamp}
 
-async def pp(username: str) -> tuple[str,float]:
-	global hd
-	async with aiohttp.ClientSession() as session:
-		while True:
-			async with session.get(f"{base_url}/users/{username}",params={'key':'username'},headers=hd) as data:
-				data = await data.json()
-				if data == {'error':None}:
-					raise ValueError(f'Username {username} not found')
-				try:
-					return data['username'], data['statistics']['pp']
-				except KeyError:
-					token = await get_token()
-					hd['Authorization'] = f'Bearer {token}'
-# async def main():
-# 	# print(await has_supported('jvxm'))
-# 	print(await pp('ash8ydghas8dhja8s'))
+	@classmethod
+	async def get_rank(cls,username: str) -> dict[str,str|int]:
+		data = await cls.__check_user(username)
+		return {'username':data['username'],'global_rank':data['statistics']['global_rank'],'country_rank':data['statistics']['country_rank']}
 
-# asyncio.run(main())
+	@classmethod
+	async def get_pfp(cls,username: str) -> dict[str,str]:
+		data = await cls.__check_user(username)
+		return {'username':data['username'],'url':data['avatar_url']} 
+
+	@classmethod
+	async def get_supported_status(cls,username: str) -> dict[str,str|bool]:
+		data = await cls.__check_user(username)
+		return {'username':data['username'],'is_supporter':data['is_supporter'],'has_supported':data['has_supported']}
+
+	@classmethod
+	async def get_country(cls,username: str) -> dict[str,str|dict[str,str]]:
+		data = await cls.__check_user(username)
+		return {'username':data['username'],'country_name':data['country']['name'],'country_code':country_info[data['country']['code']]}
 
 
+class UserNotFound(Exception):
+	...

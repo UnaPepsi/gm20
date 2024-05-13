@@ -1,5 +1,5 @@
 async def changelog(version: str) -> str:
-	with open("resources/changelog.txt", "r") as f:
+	with open("resources/files/changelog.txt", "r") as f:
 		lines = f.readlines()
 		if version == "latest":
 			version = lines[0][:-1]

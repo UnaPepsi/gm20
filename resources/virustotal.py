@@ -1,6 +1,5 @@
 import aiohttp
 from os import environ
-from asyncio import sleep
 from typing import Any, Self
 import hashlib
 
@@ -48,31 +47,3 @@ class VirusTotal:
 				if response.status != 200:
 					raise NoFile("File dosen't exist or is not scanned yet")
 				return await response.json()
-
-async def asdas():
-	async with VirusTotal() as vt:
-		file = await vt.upload_file(open('C:/Users/user/Documents/Games/xd/slinky.exe','rb'))
-		report = await vt.get_report(file['data']['id'])
-		file_report = await vt.check_file_report(report['meta']['file_info']['sha256'])
-		
-
-# async def scan_file(file: bytes):
-# 	files = { "file": file}
-# 	async with aiohttp.ClientSession() as sess:
-# 		async with sess.post(url='files',data=files,headers=headers) as resp:
-# 			if resp.status != 200:
-# 				raise UploadError()
-# 			data = await resp.json()
-# 			print(data['data']['id'])
-# 			await sleep(5)
-# 			print(data['data']['id'])
-# 		async with sess.get(url=f"https://www.virustotal.com/api/v3/analyses/{data['data']['id']}",headers=headers) as resp:
-# 			if resp.status != 200:
-# 				raise MissURL()
-# 			data = await resp.json()
-# 			print(data['data']['links']['item'], data['data']['attributes']['stats'])
-# 			# return await resp.json()
-# 		async with sess.get(url=f"https://www.virustotal.com/api/v3/files/{data['meta']['file_info']['sha256']}",headers=headers) as resp:
-# 			if resp.status != 200:
-# 				raise MissURL('asdasdasda:V')
-			
