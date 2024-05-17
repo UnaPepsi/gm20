@@ -4,7 +4,7 @@ from discord.ext import commands, tasks
 from random import choice, randint
 from resources import levels, customEmbed
 from time import localtime, time
-from asyncio import sleep
+from asyncio import sleep, TimeoutError
 from aiohttp import ClientSession
 from bs4 import BeautifulSoup
 from resources.utils import json_utils, perms
@@ -371,13 +371,27 @@ class MiscCog(commands.Cog):
 		await interaction.followup.send(embed=embed)
 		await message.reply('Scanned this',mention_author=False)
 
+	@commands.cooldown(rate=1,per=120,type=commands.BucketType.guild)
 	@commands.command(name='rl')
 	async def reload_cogs(self, ctx: commands.Context):
+		def check(m): return m.content == 'what' and m.author.id == ctx.author.id
 		if ctx.author.id != 624277615951216643:
+			await ctx.send('hey guess what')
+			try: await self.bot.wait_for('message',timeout=30,check=check)
+			except TimeoutError: ...
+			else: await ctx.send('chicken butt')
 			return
-		for cog in ('customEmbedCog','fortniteCog','miscCog','ossCog','tokenAndXpCog'):
+		for cog in ('customEmbedCog','fortniteCog','miscCog','ossCog','tokenAndXpCog','musicCog'):
 			await self.bot.reload_extension('cogs.'+cog)
 		await ctx.send('Done!')
+	@reload_cogs.error
+	async def reload_cogs_error(self, ctx: commands.Context, error: commands.CommandError):
+		if isinstance(error,commands.CommandOnCooldown):
+			if ctx.author.id == 624277615951216643:
+				for cog in ('customEmbedCog','fortniteCog','miscCog','ossCog','tokenAndXpCog','musicCog'):
+					await self.bot.reload_extension('cogs.'+cog)
+				await ctx.send('Done! cd tho')
+		else: raise error
 
 	@commands.cooldown(rate=1,per=3,type=commands.BucketType.guild)
 	@commands.command(name='botsync')

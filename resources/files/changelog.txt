@@ -1,4 +1,4 @@
-2.40.2
+3.1.0
 Version 2.0.0
 - Replaced old commands with slash commands
 - User messages are no longer logged (this was used to check for errors)
@@ -265,4 +265,14 @@ Version 2.40.1
 End of changelog
 Version 2.40.2
 - Fixed regex on token detection
+End of changelog
+Version 3.0.0
+- Bot now uses Cogs and GroupCogs, meaning there are now commands with _"space"_ in between them (it also means code is more readable)
+- osu! commands are in a GroupCog now
+- Fortnite commands are in a GroupCog now
+- Removed /accgen
+- Removed some commands only available to me so it doesn't matter
+End of changelog
+Version 3.1.0
+- Added music hybrid commands
 End of changelog

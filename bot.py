@@ -17,6 +17,7 @@ class Bot(commands.Bot):
 		await bot.load_extension('cogs.ossCog')
 		await bot.load_extension('cogs.miscCog')
 		await bot.load_extension('cogs.tokenAndXpCog')
+		await bot.load_extension('cogs.musicCog')
 
 bot = Bot(command_prefix='..',intents=discord.Intents.all())
 
