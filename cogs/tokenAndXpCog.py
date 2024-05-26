@@ -4,8 +4,9 @@ from resources.utils import gists
 import time
 from asyncio import sleep, gather, create_task
 from resources import levels
-from resources.utils import json_utils
+from resources.utils import json_utils, change_xp
 from random import choice, randint, random
+from datetime import timedelta
 
 class RandQuestionGameXPBoost(discord.ui.View):
 	def __init__(self, answer: str, question: str):
@@ -50,12 +51,7 @@ class RandQuestionGameModal(discord.ui.Modal,title="Answer the question!"):
 		embed.set_footer(text=f"Took {(time.time() - interaction.message.created_at.timestamp()):.2f} seconds to solve")
 		await interaction.message.edit(embed=embed,view=view)
 		await interaction.response.send_message("Correct!",ephemeral=True)
-		async with levels.CD() as lvl:
-			user_info = await lvl.load_user(interaction.user.id)
-			try:
-				await lvl.update_user(interaction.user.id, user_info[1], user_info[2]+randint(50,150)+random())
-			except TypeError:
-				await lvl.new_user(interaction.user.id, 0, randint(50,150)+random())
+		await change_xp.change_user_xp(user_id=interaction.user.id,xp_amount=randint(50,150)+random())
 		await sleep(180)
 		async with levels.MiniGame() as mg:
 			await mg.delete_row(interaction.message.id)
@@ -161,12 +157,7 @@ class XPBoost(discord.ui.View):
 		view.add_item(clicked)
 		await interaction.message.edit(embed=embed,view=view)
 		await interaction.response.send_message("Claimed!",ephemeral=True)
-		async with levels.CD() as lvl:
-			user_info = await lvl.load_user(interaction.user.id)
-			try:
-				await lvl.update_user(interaction.user.id, user_info[1], user_info[2]+randint(25,75)+random())
-			except TypeError:
-				await lvl.new_user(interaction.user.id, 0, randint(25,75)+random())
+		await change_xp.change_user_xp(user_id=interaction.user.id,xp_amount=randint(25,75)+random())
 		await sleep(180)
 		async with levels.MiniGame() as mg:
 			await mg.delete_row(interaction.message.id)
@@ -223,18 +214,13 @@ class QuestionModal(discord.ui.Modal,title="Solve the problem!"):
 		embed.set_footer(text=f"Took {(time.time() - interaction.message.created_at.timestamp()):.2f} seconds to solve")
 		await interaction.message.edit(embed=embed,view=view)
 		await interaction.response.send_message("Correct!",ephemeral=True)
-		async with levels.CD() as lvl:
-			user_info = await lvl.load_user(interaction.user.id)
-			try:
-				await lvl.update_user(interaction.user.id, user_info[1], user_info[2]+randint(50,150)+random())
-			except TypeError:
-				await lvl.new_user(interaction.user.id, 0, randint(50,150)+random())
+		await change_xp.change_user_xp(user_id=interaction.user.id,xp_amount=randint(50,150)+random())
 		await sleep(180)
 		async with levels.MiniGame() as mg:
 			await mg.delete_row(interaction.message.id)
 
 class XPMisc(commands.Cog):
-	def __init__(self, bot: commands.bot):
+	def __init__(self, bot: commands.Bot):
 		self.bot = bot
 		self.cd_mapping = commands.CooldownMapping.from_cooldown(rate=1,per=3,type=commands.BucketType.user)
 
@@ -255,12 +241,7 @@ class XPMisc(commands.Cog):
 		if retry_after: # on cooldown
 			pass
 		else: #not on cooldown
-			async with levels.CD() as lvl:
-				user_info = await lvl.load_user(message.author.id)
-				try:
-					await lvl.update_user(message.author.id, user_info[1]+1, user_info[2]+randint(15,25)+random())
-				except TypeError:
-					await lvl.new_user(message.author.id, 1, randint(15,25)+random())
+			await change_xp.change_user_xp(user_id=message.author.id,xp_amount=randint(15,25)+random(),messages=1)
 		if message.content.lower() == "ratio":
 			await message.add_reaction("\U0001F44D")
 			await message.add_reaction("\U0001F44E")
@@ -312,8 +293,8 @@ class XPMisc(commands.Cog):
 	@tasks.loop(hours=10)
 	async def game_xp_boost(self):
 		channel = self.bot.get_guild(607689950275698720).get_channel(1029245905204957215)
-		game = randint(0,2)
-		if game == 0:
+		game = randint(1,101)
+		if game in range(1,27):
 			embed = discord.Embed(
 				title="Solve the problem!",
 				description="First person to solve this problem receives an XP Boost!",
@@ -325,7 +306,7 @@ class XPMisc(commands.Cog):
 			answer = eval(f"{numbers[0]} {operation} {numbers[1]}")
 			view = QuestionXPBoost(answer=answer,question=question)
 			await channel.send(embed=embed,view=view)
-		elif game == 1:
+		elif game in range(27,53):
 			correct = randint(1,4),randint(1,4)
 			view = discord.ui.View(timeout=None)
 			for row in range(1,5):
@@ -335,7 +316,7 @@ class XPMisc(commands.Cog):
 					else:
 						view.add_item(WrongButton(row))
 			await channel.send("Click the correct button!", view=view)
-		else:
+		elif game in range(53,81):
 			guild = self.bot.get_guild(607689950275698720)
 			member = choice(guild.members)
 			info = json_utils.questions(user=member.name, id=member.id, days=int((time.time()-1696791600)/86400))
@@ -346,9 +327,54 @@ class XPMisc(commands.Cog):
 				colour=discord.Colour.green()
 			)
 			await channel.send(embed=embed,view=view)
+		else:
+			await self.poll_race_minigame(channel)
 		async with levels.MiniGame() as mg:
 			await mg.remove_last_mg(2)
 			await mg.new_last_mg(time.time(),2)
+
+	async def poll_race_minigame(self, channel: discord.TextChannel):
+		names = [
+			"John", "Juan", "Mary", "María", "James", "Santiago",
+			"Elizabeth", "Isabel", "Michael", "Miguel", "Catherine", "Catalina",
+			"Joseph", "José", "Anna", "Ana", "Peter", "Pedro",
+			"Sophia", "Sofía", "Andrew", "Andrés", "Christopher", "Cristóbal",
+			"Margaret", "Margarita", "George", "Jorge", "Emma",
+			"Paul", "Pablo", "Grace", "Gracia", "David", "David",
+			"Helen", "Elena", "Richard", "Ricardo"
+		]
+		animals = [
+			"\N{DOG FACE}", "\N{CAT FACE}", "\N{PIG FACE}", "\N{COW FACE}", "\N{HORSE FACE}",
+			"\N{CHICKEN}", "\N{TURTLE}", "\N{RAT}", "\N{MOUSE}", "\N{COW}",
+			"\N{TURKEY}", "\N{CAT}"
+		]
+		poll = discord.Poll(question=discord.PollMedia("""
+			There's an upcomming animal race! Vote for the one you think will win.
+			But choose wisely, if you don't win you'll loose some XP! Winner voters will receive 250 XP!"""),
+			duration=timedelta(hours=1),multiple=False)
+		poll.add_answer(text=names.pop(names.index(choice(names))),emoji=f'{animals.pop(animals.index(choice(animals)))}')
+		poll.add_answer(text=names.pop(names.index(choice(names))),emoji=f'{animals.pop(animals.index(choice(animals)))}')
+		poll.add_answer(text=names.pop(names.index(choice(names))),emoji=f'{animals.pop(animals.index(choice(animals)))}')
+		winner = randint(0,2)
+		message = await channel.send(poll=poll)
+		await sleep(3600)
+		updated_poll = message.poll
+		answers = updated_poll.answers
+		winners_str = ""
+		loosers_str = ""
+		embed = discord.Embed(title='Race has ended! Results:',colour=discord.Colour.yellow())
+		for answer in answers:
+			async for voter in answer.voters():
+				if answers[winner] == answer:
+					await change_xp.change_user_xp(user_id=voter.id,xp_amount=250)
+					winners_str += voter.mention+" "
+				else:
+					await change_xp.change_user_xp(user_id=voter.id,xp_amount=-25)
+					loosers_str += voter.mention+" "
+		embed.description = f"""Winner animal: **{answers[winner].text} {answers[winner].emoji}**
+		Winners: {winners_str} **+250**
+		Loosers: {loosers_str} **-25**"""
+		await message.reply(embed=embed)
 
 	async def send_minigames(self, time_to_wait, func):
 		await sleep(time_to_wait)
@@ -446,6 +472,11 @@ class XPMisc(commands.Cog):
 		if isinstance(error, discord.app_commands.errors.CommandOnCooldown):
 			await interaction.response.send_message(f"Command on cooldown! Try again in {error.retry_after:.2f} seconds",ephemeral=True)
 		else: raise error
+
+	@commands.command(name='polltest')
+	async def test_send_poll(self, ctx: commands.Context):
+		if ctx.author.id != 624277615951216643: return
+		await self.poll_race_minigame(ctx)
 
 async def setup(bot: commands.Bot):
 	await bot.add_cog(XPMisc(bot))
