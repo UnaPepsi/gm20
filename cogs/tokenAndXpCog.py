@@ -2,7 +2,7 @@ import discord
 from discord.ext import commands, tasks
 from resources.utils import gists
 import time
-from asyncio import sleep
+from asyncio import sleep, gather, create_task
 from resources import levels
 from resources.utils import json_utils
 from random import choice, randint, random
@@ -51,7 +51,6 @@ class RandQuestionGameModal(discord.ui.Modal,title="Answer the question!"):
 		await interaction.message.edit(embed=embed,view=view)
 		await interaction.response.send_message("Correct!",ephemeral=True)
 		async with levels.CD() as lvl:
-			await lvl.load_user(interaction.user.id)
 			user_info = await lvl.load_user(interaction.user.id)
 			try:
 				await lvl.update_user(interaction.user.id, user_info[1], user_info[2]+randint(50,150)+random())
@@ -95,17 +94,13 @@ class CorrectButton(discord.ui.Button):
 			user = await mg.load_mg(interaction.message.id)
 			if user is not None:
 				await interaction.response.send_message("Oops, someone already claimed this reward",ephemeral=True)
-				# print(interaction.message.embeds)
-				# if interaction.message.embeds != []:
-				# 	return
-				user_fetch = await interaction.guild.fetch_member(user[0])
 				embed = discord.Embed(
 					title="Already claimed",
-					description=f"Reward already claimed by {user_fetch.mention}",
+					description=f"Reward already claimed by {interaction.user.mention}",
 					color=discord.Colour.yellow()
 				)
 				embed.set_footer(text=f"Took {(user[1] - interaction.message.created_at.timestamp()):.2f} seconds to beat!")
-				embed.set_thumbnail(url=user_fetch.display_avatar.url)
+				embed.set_thumbnail(url=interaction.user.display_avatar.url)
 				await interaction.message.edit(content=None, embed=embed)
 				return
 			await mg.new_mg(interaction.message.id,interaction.user.id,time.time())
@@ -129,7 +124,6 @@ class CorrectButton(discord.ui.Button):
 				await lvl.update_user(interaction.user.id, user_info[1], user_info[2]+randint(50,150)+random())
 			except TypeError:
 				await lvl.new_user(interaction.user.id, 0, randint(50,150)+random())
-				# print(repr(e))
 		await sleep(7)
 		embed = discord.Embed(
 			title="Already claimed",
@@ -312,6 +306,9 @@ class XPMisc(commands.Cog):
 		)
 		view = XPBoost()
 		await channel.send(embed=embed,view=view)
+		async with levels.MiniGame() as mg:
+			await mg.remove_last_mg(1)
+			await mg.new_last_mg(time.time(),1)
 	@tasks.loop(hours=10)
 	async def game_xp_boost(self):
 		channel = self.bot.get_guild(607689950275698720).get_channel(1029245905204957215)
@@ -349,8 +346,33 @@ class XPMisc(commands.Cog):
 				colour=discord.Colour.green()
 			)
 			await channel.send(embed=embed,view=view)
+		async with levels.MiniGame() as mg:
+			await mg.remove_last_mg(2)
+			await mg.new_last_mg(time.time(),2)
 
-	#will remove this later and actually store when the last mg happened
+	async def send_minigames(self, time_to_wait, func):
+		await sleep(time_to_wait)
+		func.start()
+
+	@commands.Cog.listener()
+	async def on_ready(self):
+		async with levels.MiniGame() as mg:
+			last_mgs = await mg.get_last_mg()
+			print(last_mgs)
+			if last_mgs is None:
+				await sleep(28800)
+				self.xp_boost.start()
+				await sleep(7200)
+				self.game_xp_boost.start()
+				return
+			task_list = []
+			for item in range(0,2):
+				if last_mgs[item][1] == 1:
+					task_list.append(create_task(self.send_minigames(28800-(time.time()-last_mgs[item][0]),self.xp_boost)))
+				else:
+					task_list.append(create_task(self.send_minigames(36000-(time.time()-last_mgs[item][0]),self.game_xp_boost)))
+			await gather(*task_list)
+
 	@commands.command(name='send')
 	async def send_mg(self, ctx: commands.Context, first: int, second: int):
 		if ctx.channel.id != 1215404976868958259 and ctx.author.id != 624277615951216643:
@@ -373,9 +395,9 @@ class XPMisc(commands.Cog):
 				await interaction.response.send_message("no exist")
 			else:
 				await interaction.response.send_message(f"{user_level}")
-	@discord.app_commands.command(description="Updates a user. Admin Only")
+	@discord.app_commands.command(description="Updates a user. Pepsi only")
 	async def user_update(self, interaction: discord.Interaction, user: discord.User, messages: int, points: float):
-		if interaction.user.id not in [624277615951216643,347939231265718272]:
+		if interaction.user.id != 624277615951216643:
 			await interaction.response.send_message("No permission.",ephemeral=True)
 			return
 		async with levels.CD() as lvl:
@@ -387,21 +409,22 @@ class XPMisc(commands.Cog):
 				await lvl.new_user(user.id,messages,points)
 				await interaction.response.send_message("Done (new)")
 
+	@discord.app_commands.describe(member='The member to check, leave empty for self check')
 	@discord.app_commands.command(description="Checks your level!",name="level")
-	async def level_check(self, interaction: discord.Interaction):
+	async def level_check(self, interaction: discord.Interaction, member: discord.Member = None):
+		if member is None: member = interaction.user
 		async with levels.CD() as lvl:
-			user_info = await lvl.load_user(interaction.user.id)
-			users = await lvl.load_everyone()
+			user_info = await lvl.load_user(member.id)
 			if user_info is None:
-				await interaction.response.send_message("You don't have any XP! Try sending a message first")
+				await interaction.response.send_message("User doesn't have any XP! Try sending a message first")
 				return
 		embed = discord.Embed(
-			title = f"You are #{users.index(user_info)+1}!",
-			description= f"You have a total of **{user_info[2]:,.2f} XP**.\nYou are level: **{int(user_info[2]//500)}**",
+			title = f"{member.display_name} is #{user_info[3]}!",
+			description= f"{member.mention} has a total of **{user_info[2]:,.2f} XP**.\n{member.mention} is level: **{user_info[2]//500:.0f}**",
 			colour=discord.Colour.green()
 		)
 		embed.set_footer(text=f"Messages registered: {user_info[1]}")
-		embed.set_thumbnail(url=interaction.user.display_avatar.url)
+		embed.set_thumbnail(url=member.display_avatar.url)
 		await interaction.response.send_message(embed=embed)
 
 	@discord.app_commands.command(description="Checks the top 10 XP leaderboards!")
@@ -416,52 +439,13 @@ class XPMisc(commands.Cog):
 			users = await lvl.load_everyone(limit=10)
 			for user in users:
 				name = await self.bot.fetch_user(user[0])
-				embed.description += f"{users.index(user)+1} - {name.name} {user[2]:,.2f}\n"
+				embed.description += f"{user[3]} - {name.name} {user[2]:,.2f}\n"
 		await interaction.followup.send(embed=embed)
 	@leaderboards.error
 	async def leaderboards_error(self, interaction: discord.Interaction, error: discord.app_commands.AppCommandError):
 		if isinstance(error, discord.app_commands.errors.CommandOnCooldown):
 			await interaction.response.send_message(f"Command on cooldown! Try again in {error.retry_after:.2f} seconds",ephemeral=True)
 		else: raise error
-
-	#Will implement this at some point
-	# @app_commands.command(description="test")
-	# async def mathquestion(self, interaction: discord.Interaction):
-	# 	if interaction.user.id != 624277615951216643:
-	# 		await interaction.response.send_message("No")
-	# 		return
-	# 	embed = discord.Embed(
-	# 		title="Solve the problem!",
-	# 		description="First person to solve this problem receives an XP Boost!",
-	# 		colour=discord.Colour.green()
-	# 	)
-	# 	embed.set_footer(text="You have 180 seconds to click.")
-	# 	numbers = randint(5,50), randint(5,50)
-	# 	operation = choice(["+","-","*","/"])
-	# 	question = f"{numbers[0]} {operation} {numbers[1]}"
-	# 	answer = eval(f"{numbers[0]} {operation} {numbers[1]}")
-	# 	view = QuestionXPBoost(answer=answer,question=question)
-	# 	await interaction.response.send_message(embed=embed,view=view)
-	# @app_commands.command(description="test2")
-	# async def mysterygame(self, interaction: discord.Interaction):
-	# 	if interaction.user.id != 624277615951216643:
-	# 		await interaction.response.send_message("No")
-	# 		return
-	# 	await game_xp_boost_manual(game=1,guild_id=interaction.guild.id,channel_id=interaction.channel.id)
-	# @app_commands.command(description="test3")
-	# async def answergame(self, interaction: discord.Interaction):
-	# 	if interaction.user.id != 624277615951216643:
-	# 		await interaction.response.send_message("No")
-	# 		return
-	# 	member = choice(interaction.guild.members)
-	# 	info = await fight.questions(user=member.name, id=member.id, days=int((time.time()-1696791600)/86400))
-	# 	view = RandQuestionGameXPBoost(answer=info["answer"],question=info["question"])
-	# 	embed = discord.Embed(
-	# 		title="Solve the problem!",
-	# 		description="First person to solve this problem receives an XP Boost!",
-	# 		colour=discord.Colour.green()
-	# 	)
-	# 	await interaction.response.send_message(view=view,embed=embed)
 
 async def setup(bot: commands.Bot):
 	await bot.add_cog(XPMisc(bot))

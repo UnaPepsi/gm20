@@ -1,4 +1,4 @@
-3.1.0
+3.4.1
 Version 2.0.0
 - Replaced old commands with slash commands
 - User messages are no longer logged (this was used to check for errors)
@@ -275,4 +275,17 @@ Version 3.0.0
 End of changelog
 Version 3.1.0
 - Added music hybrid commands
+End of changelog
+Version 3.2.0
+- XP minigames are now not required to be started manually
+End of changelog
+Version 3.3.0
+- You can now specify a member when using /level. Because of this the embed has changed a bit
+- I now use SQL to get the leaderboard top position instead of Python lol
+End of changelog
+Version 3.4.0
+- Added volume hybrid command
+End of changelog
+Version 3.4.1
+- Fixes for music commands
 End of changelog

@@ -20,19 +20,19 @@ class MusicCog(commands.Cog):
 		self.bot = bot
 		self.bot.queues = {}
 		self.bot.tasks_ = {}
+		self.bot.source_plays = {}
 
 	async def play_songs(self,voice_client: discord.VoiceClient, id: int):
 			try:
 				while len(self.bot.queues[id]) != 0 and voice_client is not None:
 					if voice_client.is_playing():
-						print('no')
 						await asyncio.sleep(3)
 						continue
 					loop = asyncio.get_event_loop()
 					info = await loop.run_in_executor(None, get_audio, self.bot.queues[id][0])
 					source = discord.FFmpegPCMAudio(source=info['bytes'],options='-vn',executable='/usr/bin/ffmpeg',pipe=True)
-					source_play = discord.PCMVolumeTransformer(source,volume=1.0)
-					voice_client.play(source_play)
+					self.bot.source_plays[id] = discord.PCMVolumeTransformer(source,volume=self.bot.source_plays[id].volume if self.bot.source_plays.get(id,None) is not None else 0.5)
+					voice_client.play(self.bot.source_plays[id])
 					await asyncio.sleep(info['duration'])
 					self.bot.queues[id].pop(0)
 			except asyncio.CancelledError:
@@ -54,13 +54,13 @@ class MusicCog(commands.Cog):
 			self.bot.queues[ctx.guild.id] = []
 		await ctx.typing()
 		self.bot.queues[ctx.guild.id].append(url)
-		if hasattr(ctx.voice_client,'is_playing') and ctx.voice_client.is_playing():
+		if hasattr(ctx.voice_client,'is_playing') and (ctx.voice_client.is_playing() or ctx.voice_client.is_paused()):
 			await ctx.send('Added to the queue')
 			return
 		loop = asyncio.get_event_loop()
 		try:
 			info = await loop.run_in_executor(None, get_audio, url)
-			if info['length'] > 7200:
+			if info['duration'] > 7200:
 				await ctx.send('Video must be shorter than 2 hours')
 				return
 			abytes = info['bytes']
@@ -72,11 +72,13 @@ class MusicCog(commands.Cog):
 		else:
 			await ctx.author.voice.channel.connect(self_deaf=True)
 		source = discord.FFmpegPCMAudio(source=abytes,options='-vn',executable='/usr/bin/ffmpeg',pipe=True)
-		source_play = discord.PCMVolumeTransformer(source,volume=1.0)
+		self.bot.source_plays[ctx.guild.id] = discord.PCMVolumeTransformer(source,volume=self.bot.source_plays[ctx.guild.id].volume if self.bot.source_plays.get(ctx.guild.id,None) is not None else 0.5)
 		await ctx.send("Connected")
-		ctx.voice_client.play(source_play)
+		ctx.voice_client.play(self.bot.source_plays[ctx.guild.id])
 		await asyncio.sleep(info['duration'])
-		self.bot.queues[ctx.guild.id].remove(url)
+		print(self.bot.queues[ctx.guild.id])
+		if url in self.bot.queues[ctx.guild.id]:
+			self.bot.queues[ctx.guild.id].remove(url)
 		self.bot.tasks_[ctx.guild.id] = asyncio.create_task(self.play_songs(ctx.voice_client,ctx.guild.id))
 
 	@commands.cooldown(1,5,commands.BucketType.guild)
@@ -89,6 +91,7 @@ class MusicCog(commands.Cog):
 			ctx.voice_client.stop()
 		if self.bot.tasks_.get(ctx.guild.id,None) is not None:
 			self.bot.tasks_[ctx.guild.id].cancel()
+		self.bot.queues[ctx.guild.id].pop(0)
 		self.bot.tasks_[ctx.guild.id] = asyncio.create_task(self.play_songs(ctx.voice_client,ctx.guild.id))
 
 	@commands.cooldown(1,5,commands.BucketType.guild)
@@ -106,6 +109,13 @@ class MusicCog(commands.Cog):
 			return
 		await ctx.send(f"**Now Playing: {self.bot.queues[ctx.guild.id][0]}**")
 
+	@commands.hybrid_command(name='volume')
+	async def change_vol(self, ctx: commands.Context, vol: float):
+		if self.bot.source_plays.get(ctx.guild.id,None) is None:
+			return
+		self.bot.source_plays[ctx.guild.id].volume = vol
+		await ctx.send(f'Volume set to {self.bot.source_plays[ctx.guild.id].volume}')
+
 	@commands.Cog.listener()
 	async def on_voice_state_update(self, member: discord.Member, before: discord.VoiceState, after: discord.VoiceState):
 		if member.id == self.bot.user.id and after.channel is None:
@@ -114,6 +124,8 @@ class MusicCog(commands.Cog):
 	async def cog_command_error(self, ctx: commands.Context, error: commands.CommandError):
 		if isinstance(error, commands.CommandOnCooldown):
 			await ctx.send('Command on cooldown!')
+		elif isinstance(error,commands.BadArgument):
+			await ctx.send('Must be a number')
 		else: raise error
 
 async def setup(bot: commands.Bot):
