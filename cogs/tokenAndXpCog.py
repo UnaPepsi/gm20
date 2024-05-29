@@ -476,7 +476,7 @@ class XPMisc(commands.Cog):
 	@commands.command(name='polltest')
 	async def test_send_poll(self, ctx: commands.Context):
 		if ctx.author.id != 624277615951216643: return
-		await self.poll_race_minigame(ctx)
+		await self.poll_race_minigame(ctx.channel)
 
 async def setup(bot: commands.Bot):
 	await bot.add_cog(XPMisc(bot))

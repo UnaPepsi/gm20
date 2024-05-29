@@ -5,6 +5,8 @@ class TagInUse(Exception):
     ...
 class BadTag(Exception):
     ...
+class TooManyEmbeds(Exception):
+	...
 
 class CustomEmbed:
 	def __init__(self, path: str = 'resources/files/users.db'):
@@ -28,6 +30,8 @@ class CustomEmbed:
 	async def new_embed(self,user: int, tag: str, embed: dict[Any,Any]) -> None:
 		if await self.load_embed(user=user,tag=tag) is not None:
 			raise TagInUse('Tag already in use')
+		if await self.embeds_amount(user=user) > 10:
+			raise TooManyEmbeds('Embed limit reached')
 		await self.cursor.execute("""
 		INSERT INTO ce VALUES
 		(?, ?, ?)
@@ -47,3 +51,10 @@ class CustomEmbed:
 		DELETE FROM ce WHERE user = ? AND tag = ?
 		""",(user,tag))
 		await self.connection.commit()
+	async def embeds_amount(self, user: int) -> int:
+		await self.cursor.execute("""
+		SELECT COUNT(*) FROM ce
+		WHERE user = ?
+		""",(user,))
+		result = await self.cursor.fetchone()
+		return result[0]

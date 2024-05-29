@@ -3,7 +3,7 @@ from discord import app_commands
 from discord.ext import commands
 import re
 from datetime import datetime
-from resources.customEmbed import CustomEmbed, BadTag, TagInUse
+from resources.customEmbed import CustomEmbed, BadTag, TagInUse, TooManyEmbeds
 from resources.utils import perms
 import time
 from ast import literal_eval
@@ -317,6 +317,8 @@ class EditEmbed:
 					await interaction.response.send_message("Something wrong happened",ephemeral=True)
 				except TagInUse:
 					await interaction.response.send_message("You already have a saved embed with that tag",ephemeral=True)
+				except TooManyEmbeds:
+					await interaction.response.send_message("You have reached the limit of embeds you can have",ephemeral=True)
 
 class CECog(commands.GroupCog,name='embed'):
 	def __init__(self, bot: commands.Bot):
@@ -330,9 +332,6 @@ class CECog(commands.GroupCog,name='embed'):
 	@app_commands.command(name='create',description='Creates a custom embed!')
 	@app_commands.checks.has_permissions(manage_messages=True)
 	async def create_embed(self, interaction: discord.Interaction):
-		if interaction.user.id != 624277615951216643:
-			await interaction.response.send_message('Command in development. Will be available soon')
-			return
 		embed = discord.Embed(
 			title='This is the title',
 			description='This is the description, every field supports markdown, such as `this`, **this**, ~~this~~ ```python\n print("And many others")```'+
